@@ -264,5 +264,6 @@ crashlytics-build.properties
 fabric.properties
 
 # Editor-based Restorable State
+.idea/
 .idea/editor.xml
 .idea/vcs.xml
