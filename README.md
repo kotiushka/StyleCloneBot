@@ -29,11 +29,55 @@ Telegram User → aiogram Bot → FastAPI Backend → OpenAI API (xAI)
 
 ### Quick Start
 
-#### 1. Clone the repository
+## 1. Clone the repository
 
 ```bash
 git clone <your-repository-url>
 cd style-mirror
-
-#### 2. Create and activate virtual environment
 ```
+
+## 2. Create and activate virtual environment
+
+```bash
+python -m venv venv
+source venv/bin/activate        # On Windows: venv\Scripts\activate
+```
+
+## 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 4. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Fill in the .env file with your credentials:
+
+TELEGRAM_BOT_TOKEN
+OPENAI_API_KEY
+
+## 5. Run the application
+
+Open two terminals:
+
+# Terminal 1 — FastAPI server:
+
+```bash
+uvicorn src.main:app --reload --port 8000
+```
+
+# Terminal 2 — Telegram Bot:
+
+```bash
+python -m src.bot.bot
+```
+
+### How to Use
+
+1. Make sure both services are running.
+2. Open Telegram and send any message to your bot.
+3. The bot will reply in the style of the predefined person.
