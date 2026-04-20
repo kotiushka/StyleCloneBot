@@ -8,7 +8,7 @@ A Telegram bot that mimics the communication style of any specific person using 
 
 ---
 
-### About the Project
+# About the Project
 
 **StyleMirror** is an intelligent Telegram bot that learns and replicates the unique speaking style of a chosen person — including tone, slang, emoji usage, message length, humor, and phrasing.
 
@@ -27,7 +27,7 @@ At this MVP stage, the bot successfully receives messages from Telegram, process
 
 Telegram User → aiogram Bot → FastAPI Backend → OpenAI API (xAI)
 
-### Quick Start
+# Quick Start
 
 ## 1. Clone the repository
 
@@ -57,20 +57,19 @@ cp .env.example .env
 
 Fill in the .env file with your credentials:
 
-TELEGRAM_BOT_TOKEN
-OPENAI_API_KEY
+TELEGRAM_BOT_TOKEN | OPENAI_API_KEY
 
 ## 5. Run the application
 
 Open two terminals:
 
-# Terminal 1 — FastAPI server:
+### Terminal 1 — FastAPI server:
 
 ```bash
 uvicorn src.main:app --reload --port 8000
 ```
 
-# Terminal 2 — Telegram Bot:
+### Terminal 2 — Telegram Bot:
 
 ```bash
 python -m src.bot.bot
