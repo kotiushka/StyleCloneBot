@@ -57,7 +57,7 @@ cp .env.example .env
 
 Fill in the .env file with your credentials:
 
-TELEGRAM_BOT_TOKEN | OPENAI_API_KEY
+BOT_TOKEN | OPENAI_API_KEY
 
 ## 5. Run the application
 
