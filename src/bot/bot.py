@@ -20,14 +20,14 @@ async def main():
     )
     dp = Dispatcher()
     
-    dp["http_client"] = httpx.AsyncClient(base_url=config.BACKEND_URL, timeout=10.0)
+    dp["http_client"] = httpx.AsyncClient(base_url=config.BACKEND_URL, timeout=30.0)
     
     dp.include_router(router)
 
     me = await bot.get_me()
     logger.info(f"Bot @{me.username} started, polling...")
 
-    await bot.delete_webhook(drop_pending_updates=True)
+    # await bot.delete_webhook(drop_pending_updates=True)
     
     try:
         await dp.start_polling(bot)
