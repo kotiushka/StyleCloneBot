@@ -10,9 +10,9 @@ async def generate_reply(message: UserMessage, history: list[dict], mirror_user_
 
     response = await client.chat.completions.create(
         model="gpt-5.4-nano",
-        messages=get_prompt(message, history, mirror_user_name, "\n".join(f"- {msg}" for msg in example_messages)),
+        messages=get_prompt(message, history, mirror_user_name, [example_messages]),
         reasoning_effort="low",
     )
 
-
+    print(get_prompt(message, history, mirror_user_name, example_messages))
     return response.choices[0].message.content

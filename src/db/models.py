@@ -1,4 +1,5 @@
-from sqlalchemy import BigInteger, Integer, String, Text, DateTime, ForeignKey
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import BigInteger, Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from src.db.database import Base
@@ -47,6 +48,8 @@ class PersonMessage(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     person_id: Mapped[int] = mapped_column(Integer, ForeignKey("persons.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    context: Mapped[str | None] = mapped_column(Text, nullable=True)
+    embedding = Column(Vector(dim=1536), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     person: Mapped["Person"] = relationship(back_populates="messages")

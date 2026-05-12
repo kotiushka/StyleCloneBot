@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.post("/chat")
-async def read_users(message: UserMessage, db: AsyncSession = Depends(get_db)):
+async def chat_endpoint(message: UserMessage, db: AsyncSession = Depends(get_db)):
     # find or create an user
     user = await repository.get_or_create_user(
         db=db,
@@ -20,9 +20,10 @@ async def read_users(message: UserMessage, db: AsyncSession = Depends(get_db)):
     
     person = await repository.get_person_by_user(db=db, user_id=user.id)
     if not person:
-        raise HTTPException(status_code=400, detail="Сначала загрузи переписку")
+        raise HTTPException(status_code=404, detail="Сначала загрузи переписку")
     
-    example_messages = await repository.get_person_messages(db=db, person_id=person.id, limit=50)
+    # get history
+    history = await repository.get_history(db=db, user_id=user.id)
 
     # save user's message
     await repository.save_message(
@@ -32,10 +33,12 @@ async def read_users(message: UserMessage, db: AsyncSession = Depends(get_db)):
         content=message.message_text
     )
 
-    # get history
-    history = await repository.get_history(db=db, user_id=user.id)
-
     # get a response from openAI
+    example_messages = await repository.search_similar_messages(
+        db=db,
+        person_id=person.id,
+        query=message.message_text
+    )
     reply = await generate_reply(message, history, mirror_user_name=person.name, example_messages=example_messages)
 
     # save bot's message
@@ -51,6 +54,7 @@ async def read_users(message: UserMessage, db: AsyncSession = Depends(get_db)):
 
 @router.post("/persons")
 async def create_person(data: PersonCreate, db: AsyncSession = Depends(get_db)):
+    
     user = await repository.get_or_create_user(
         db=db,
         telegram_id=data.user_id,
@@ -66,9 +70,10 @@ async def create_person(data: PersonCreate, db: AsyncSession = Depends(get_db)):
     await repository.save_person_messages(
         db=db,
         person_id=person.id,
-        messages=data.messages
+        messages=[m.model_dump() for m in data.messages]
     )
     return PersonResponse(person_id=person.id)
+
 
 @router.get("/health")
 async def health():

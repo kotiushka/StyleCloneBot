@@ -1,6 +1,8 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message, ReplyKeyboardMarkup
 import httpx
 
 from aiogram.fsm.context import FSMContext
@@ -9,13 +11,14 @@ from src.parsers.telegram import get_participants, load_json, parse_messages
 from src.bot.utils import is_subscribed
 from src.bot.states import UploadStates
 from src.config import CHANNEL_ID
-from src.models.schemas import PersonCreate, UserMessage
+from src.models.schemas import PersonCreate, PersonMessageSchema, UserMessage
 
 router = Router()
 
 
 async def ask_for_file(callback: CallbackQuery, state: FSMContext):
     await state.set_state(UploadStates.waiting_for_file)
+    await callback.message.delete()
     await callback.message.answer("Отправь JSON файл экспорта переписки из Telegram.")
     await callback.answer()
 
@@ -80,6 +83,11 @@ async def handle_file(message: Message, state: FSMContext):
     await message.answer("Выбери человека чей стиль копировать:", reply_markup=keyboard)
 
 
+@router.message(UploadStates.waiting_for_file)
+async def waiting_for_document(message: Message):
+    await message.answer("Я ожидаю файл!")
+
+
 @router.callback_query(UploadStates.waiting_for_person, F.data.startswith("person:"))
 async def handle_person_choice(callback: CallbackQuery, state: FSMContext, http_client: httpx.AsyncClient):
     from_id = callback.data.split(":")[1]
@@ -94,16 +102,33 @@ async def handle_person_choice(callback: CallbackQuery, state: FSMContext, http_
         first_name=callback.from_user.first_name,
         name=person["name"],
         from_id=from_id,
-        messages=messages
+        messages=[PersonMessageSchema(**m) for m in messages]
     )
-    await http_client.post("/persons", json=payload.model_dump())
+    response = await http_client.post("/persons", json=payload.model_dump())
+    print(response.status_code)
+    print(response.text)
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🔄 Сменить персону")]
+        ],
+        resize_keyboard=True
+    )
+
+    await callback.message.delete()
 
     await callback.message.answer(
-        f"Готово! Теперь я буду отвечать в стиле <b>{person['name']}</b>.\n"
+        f"Готово! Теперь я буду отвечать в стиле <b>{person['name']}</b>.\n\n"
         f"Загружено {len(messages)} сообщений.",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=keyboard
     )
-    await callback.answer()
+
+
+@router.message(F.text == "🔄 Сменить персону")
+async def handle_change_person(message: Message, state: FSMContext):
+    await state.set_state(UploadStates.waiting_for_file)
+    await message.answer("Отправь JSON файл экспорта переписки из Telegram.")
 
 
 @router.message(F.text)
@@ -118,6 +143,11 @@ async def handle_text(message: Message, http_client: httpx.AsyncClient):
         response = await http_client.post("/chat", json=payload.model_dump())
         response.raise_for_status()
         data = response.json()
-        await message.answer(data["response"])
+        
+        parts = [p.strip() for p in data["response"].split("\n") if p.strip()]
+        for part in parts:
+            await asyncio.sleep(1)
+            await message.answer(part)
+            
     except Exception:
         await message.answer("Что-то пошло не так, попробуй позже.")

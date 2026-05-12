@@ -20,7 +20,7 @@ async def main():
     )
     dp = Dispatcher()
     
-    dp["http_client"] = httpx.AsyncClient(base_url=config.BACKEND_URL, timeout=30.0)
+    dp["http_client"] = httpx.AsyncClient(base_url=config.BACKEND_URL, timeout=120.0)
     
     dp.include_router(router)
 

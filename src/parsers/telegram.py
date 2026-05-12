@@ -1,7 +1,6 @@
 import json
 
 def get_participants(data: dict) -> list[dict]:
-    
     seen = set()
     participants = []
 
@@ -17,31 +16,43 @@ def get_participants(data: dict) -> list[dict]:
     return participants
 
 
-def parse_messages(data: dict, from_id: str) -> list[str]:
-    messages = []
+def parse_messages(data: dict, from_id: str) -> list[dict]:
+    messages = data["messages"]
+    result = []
 
-    for msg in data["messages"]:
-        if msg["type"] != "message":
+    for i, msg in enumerate(messages):
+        if msg.get("type") != "message":
             continue
-        if msg["from_id"] != from_id:
+        if msg.get("from_id") != from_id:
             continue
 
-        text = msg["text"]
-
+        text = msg.get("text", "")
         if isinstance(text, list):
             text = "".join(
                 part if isinstance(part, str) else part.get("text", "")
                 for part in text
             )
-
         text = text.strip()
-
         if len(text) < 2:
             continue
 
-        messages.append(text)
+        context = None
+        if i > 0:
+            prev = messages[i - 1]
+            if prev.get("type") == "message" and prev.get("from_id") != from_id:
+                prev_text = prev.get("text", "")
+                if isinstance(prev_text, list):
+                    prev_text = "".join(
+                        part if isinstance(part, str) else part.get("text", "")
+                        for part in prev_text
+                    )
+                prev_text = prev_text.strip()
+                if len(prev_text) >= 2:
+                    context = prev_text
 
-    return messages
+        result.append({"content": text, "context": context})
+
+    return result
 
 
 def load_json(file_bytes: bytes) -> dict:
